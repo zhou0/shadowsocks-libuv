@@ -22,7 +22,7 @@
 #define SERVER_H_
 
 #include <stdint.h>
-#include "encrypt.h"
+//#include "encrypt.h"
 #define SHADOW_MAJOR_VERSION 0
 #define SHADOW_MINOR_VERSION 2
 #define WELCOME_MESSAGE "Shadowsocks Version:" TOSTR(SHADOW_MAJOR_VERSION) "." TOSTR(SHADOW_MINOR_VERSION) \

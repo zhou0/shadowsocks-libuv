@@ -1,1 +1,0 @@
-.//up_src_client.c.o .//up_src_crypt.c.o .//up_src_encrypt.c.o .//up_src_handshake.c.o .//up_src_md5.c.o .//up_src_rc4.c.o .//up_src_remote.c.o .//up_src_server.c.o .//up_src_shadow.c.o .//up_src_tests.c.o .//up_src_utils.c.o .//up_src_getopt.c.o .//up_src_localser.c.o .//up_src_localmain.c.o .//up_src_s5.c.o

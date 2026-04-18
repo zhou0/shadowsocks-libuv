@@ -14,7 +14,7 @@
 void
 remote_connect_cb(uv_connect_t * req, int status)
 {
-    pr_info("%s %d", __FUNCTION__,status);
+    pr_info("%s %zd", __FUNCTION__, (ssize_t)status);
     shadow_t    * shadow = (shadow_t    *)req->data;
     uv_stream_t * stream = (uv_stream_t *)shadow->client;
 
@@ -44,14 +44,14 @@ remote_connect_cb(uv_connect_t * req, int status)
 void
 remote_write_cb(uv_write_t * write, int status)
 {
-    pr_info("%s %d", __FUNCTION__,status);
+    pr_info("%s %zd", __FUNCTION__, (ssize_t)status);
     shadow_t * shadow = (shadow_t *)write->handle->data;
 
     if (!status) status = uv_read_start((uv_stream_t *)shadow->remote,
                                             shadow_alloc_cb,
                                             remote_read_cb);
-//    free(write->data);
-    free(write);
+    if (write->data) free(write->data);
+    if (write) free(write);
 
     if (status) uv_close((uv_handle_t *)shadow->remote, remote_close_cb);
 }
@@ -59,7 +59,7 @@ remote_write_cb(uv_write_t * write, int status)
 void
 remote_read_cb(uv_stream_t * stream, ssize_t nread, const uv_buf_t * buf)
 {
-    pr_info("%s %d", __FUNCTION__,nread);
+    pr_info("%s %zd", __FUNCTION__, nread);
 
     do
     {
@@ -68,9 +68,11 @@ remote_read_cb(uv_stream_t * stream, ssize_t nread, const uv_buf_t * buf)
             shadow_t  * shadow = (shadow_t *)stream->data;
     uv_write_t * write = malloc(sizeof(uv_write_t));
  //   uv_buf_t * obuf = malloc(sizeof(uv_buf_t));
-  
+
  //       write->data = buf->base = cipher_decrypt(shadow, &buf->len, buf->base, nread);
-    uv_buf_t dbuf = cipher_decrypt(shadow, &buf->len, buf->base, nread);
+    uv_buf_t dbuf = cipher_decrypt(shadow, (size_t *)&buf->len, buf->base, nread);
+        write->data = dbuf.base;
+        if (buf->base) free(buf->base);
 //        cipher_decrypt(shadow, nread,buf, obuf);
 //        dump("CIPHER", buf->base,buf->len);
 //       dump("PLAIN",obuf->base,obuf->len);
@@ -113,7 +115,7 @@ remote_close_cb(uv_handle_t * handle)
 void
 fakereply_write_cb(uv_write_t * write, int status)
 {
-    pr_info("%s %d", __FUNCTION__,status);
+    pr_info("%s %zd", __FUNCTION__, (ssize_t)status);
     shadow_t * shadow = write->handle->data;
     if (shadow->data) free(shadow->data);
 

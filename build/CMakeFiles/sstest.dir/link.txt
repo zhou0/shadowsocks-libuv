@@ -1,1 +1,0 @@
-/bin/cc  -g   CMakeFiles/sstest.dir/src/crypt.c.o CMakeFiles/sstest.dir/src/encrypt.c.o CMakeFiles/sstest.dir/src/md5.c.o CMakeFiles/sstest.dir/src/rc4.c.o CMakeFiles/sstest.dir/src/tests.c.o  -o bin/sstest -rdynamic -lcrypto -lssl 

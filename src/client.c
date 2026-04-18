@@ -43,19 +43,24 @@ enum sess_state {
 
 void
 client_read_cb(uv_stream_t * stream, ssize_t nread, const uv_buf_t * buf) {
-    pr_info("%s %d", __FUNCTION__, nread);
+    pr_info("%s %zd", __FUNCTION__, nread);
 
     do {
-        if (nread <= 0) break;
+        if (nread <= 0) {
+            if (buf->base) free(buf->base);
+            break;
+        }
         if (nread == 0) return;
         // printf("%s\n", buf.base);
         //        write->data = buf.base = cipher_encrypt(shadow, &buf.len, buf.base, nread);
         shadow_t * shadow = stream->data;
         uv_write_t * write = malloc(sizeof (uv_write_t));
 //        uv_buf_t * enc_buf;
-//        cipher_encrypt(shadow, nread,buf, enc_buf); 
-//    write->data = cipher_encrypt(shadow, &buf->len, buf->base, nread); 
-       uv_buf_t ebuf =      cipher_encrypt(shadow, &buf->len, buf->base, nread); 
+//        cipher_encrypt(shadow, nread,buf, enc_buf);
+//    write->data = cipher_encrypt(shadow, &buf->len, buf->base, nread);
+       uv_buf_t ebuf = cipher_encrypt(shadow, (size_t *)&buf->len, buf->base, nread);
+        write->data = ebuf.base;
+        if (buf->base) free(buf->base);
         // printf("client: %s\n", buf.base);
         //        if (uv_write(write, (uv_stream_t *)shadow->remote, &buf, 1, remote_write_cb)) break;
         if (uv_write(write, (uv_stream_t *) shadow->remote, &ebuf, 1, remote_write_cb)) break;
@@ -68,7 +73,7 @@ client_read_cb(uv_stream_t * stream, ssize_t nread, const uv_buf_t * buf) {
 
 void
 client_write_cb(uv_write_t * write, int status) {
-    pr_info("%s %d", __FUNCTION__, status);
+    pr_info("%s %zd", __FUNCTION__, (ssize_t)status);
     shadow_t * shadow = (shadow_t *) write->handle->data;
 
 
@@ -104,4 +109,3 @@ client_close_cb(uv_handle_t * handle) {
     uv_close((uv_handle_t *) shadow->remote, shadow_free_cb);
     free(shutdown);
 }
-

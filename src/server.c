@@ -242,23 +242,23 @@ static void established_alloc_cb(uv_handle_t* handle, size_t suggested_size, uv_
 {
 
 #ifdef BUFFER_LIMIT
-//    void *buf = malloc(BUFFER_LIMIT);
-    buf = malloc(BUFFER_LIMIT);
+//    void *buf->base = malloc(BUFFER_LIMIT);
+    buf->base = malloc(BUFFER_LIMIT);
 #else
-//    void *buf = malloc(suggested_size);
-    buf = malloc(suggested_size);
+//    void *buf->base = malloc(suggested_size);
+    buf->base = malloc(suggested_size);
 #endif /* BUFFER_LIMIT */
-    if (!buf)
+    if (!buf->base)
     {
         FATAL("malloc() failed!");
     }
 
 #ifdef BUFFER_LIMIT
 //    return uv_buf_init(buf, BUFFER_LIMIT);
-    uv_buf_init(buf->base, BUFFER_LIMIT);
+    buf->len = BUFFER_LIMIT;
 #else
 //    return uv_buf_init(buf, suggested_size);
-    uv_buf_init(buf->base, suggested_size);
+    buf->len = suggested_size;
 #endif /* BUFFER_LIMIT */
 }
 
@@ -529,7 +529,7 @@ static void client_handshake_domain_resolved(uv_getaddrinfo_t *resolver, int sta
 //static void client_handshake_read_cb(uv_stream_t* stream, ssize_t nread, uv_buf_t buf)
 static void client_handshake_read_cb(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf)
 {
-   pr_info("%s %ld",__FUNCTION__,nread);
+   pr_info("%s %zd",__FUNCTION__,nread);
     server_ctx *ctx = (server_ctx *)stream->data;
 
     if (nread < 0)
@@ -567,15 +567,15 @@ static void client_handshake_read_cb(uv_stream_t* stream, ssize_t nread, const u
 static void client_handshake_alloc_cb(uv_handle_t* handle, size_t suggested_size,uv_buf_t* buf )
 {
     server_ctx *ctx = (server_ctx *)handle->data;
-//    void *buf = malloc(HANDSHAKE_BUFFER_SIZE - ctx->buffer_len);
-    buf = malloc(HANDSHAKE_BUFFER_SIZE - ctx->buffer_len);
-    if (!buf)
+//    void *buf->base = malloc(HANDSHAKE_BUFFER_SIZE - ctx->buffer_len);
+    buf->base = malloc(HANDSHAKE_BUFFER_SIZE - ctx->buffer_len);
+    if (!buf->base)
     {
         HANDLE_CLOSE(handle, handshake_client_close_cb);
         FATAL("malloc() failed!");
     }
 //    return uv_buf_init(buf, HANDSHAKE_BUFFER_SIZE - ctx->buffer_len);
-      uv_buf_init(buf->base, HANDSHAKE_BUFFER_SIZE - ctx->buffer_len);
+      buf->len = HANDSHAKE_BUFFER_SIZE - ctx->buffer_len;
 }
 
 static void connect_cb(uv_stream_t* listener, int status)
@@ -644,7 +644,7 @@ int main(int argc, char *argv[])
             server_listen = optarg;
             break;
         case 'p':
-        if (1 != sscanf(optarg, "%hu", &server_port)) 
+        if (1 != sscanf(optarg, "%hu", &server_port))
         {
 //            pr_err("bad port number: %s", optarg);
               LOGE("bad port number: %s", optarg);

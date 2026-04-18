@@ -69,7 +69,7 @@ typedef struct
     struct
     {
         int init;
-        EVP_CIPHER_CTX ctx;
+        EVP_CIPHER_CTX *ctx;
     } encrypt, decrypt;
 
 } cipher_t;

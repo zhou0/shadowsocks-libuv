@@ -1,2 +1,0 @@
-/home/lizhou/tinysocks/build/CMakeFiles/ssclient.dir
-/home/lizhou/tinysocks/build/CMakeFiles/ssserver.dir

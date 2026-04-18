@@ -30,7 +30,7 @@ void pr_do(FILE *stream,
                   va_list ap) {
   char fmtbuf[1024];
   vsnprintf(fmtbuf, sizeof(fmtbuf), fmt, ap);
-  fprintf(stream, "%s:%s: %s\n", _getprogname(), label, fmtbuf);
+  fprintf(stream, "%s:%s: %s\n", _getprogname(), label, fmtbuf); fflush(stream);
 }
 
 void pr_info(const char *fmt, ...) {

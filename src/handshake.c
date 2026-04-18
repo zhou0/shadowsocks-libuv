@@ -170,7 +170,7 @@ handshake_alloc_cb(uv_handle_t * handle, size_t suggest_size, uv_buf_t * buf)
 void
 handshake_read_cb(uv_stream_t * stream, ssize_t nread, const uv_buf_t * buf)
 {
-    pr_info("%s %d", __FUNCTION__,nread);
+    pr_info("%s %zd", __FUNCTION__, nread);
     shadow_t    * shadow = stream->data;
     handshake_t * hands  = shadow->data;
 
@@ -184,8 +184,7 @@ handshake_read_cb(uv_stream_t * stream, ssize_t nread, const uv_buf_t * buf)
     }
     while (0);
 
-//    free(buf.base);
-    free(buf->base);
+    if (buf->base) free(buf->base);
     if (nread < 0) uv_close((uv_handle_t *)stream, shadow_free_cb);
 }
 
@@ -207,10 +206,3 @@ handshake_write_cb(uv_write_t * write, int status)
 
     if (status) uv_close((uv_handle_t *)shadow->client, shadow_free_cb);
 }
-
-
-
-
-
-
-

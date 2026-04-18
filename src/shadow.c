@@ -58,6 +58,6 @@ shadow_alloc_cb(uv_handle_t * handle, size_t suggest_size, uv_buf_t * buf)
 void
 shadow_write_cb(uv_write_t * write, int status)
 {
-//    free(write->data);
+    if (write->data) free(write->data);
     free(write);
 }
