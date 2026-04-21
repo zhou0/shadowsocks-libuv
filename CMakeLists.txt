@@ -1,44 +1,69 @@
-macro(use_c99)
-  if (CMAKE_VERSION VERSION_LESS "3.1")
-    if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
-      set (CMAKE_C_FLAGS "--std=gnu99 ${CMAKE_C_FLAGS}")
-    endif ()
-  else ()
-    set (CMAKE_C_STANDARD 99)
-  endif ()
-endmacro(use_c99)
+cmake_minimum_required(VERSION 3.5)
 
+project(ss-libuv C)
 
-cmake_minimum_required(VERSION 2.8.0)
+# Set C standard
+set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_STANDARD_REQUIRED ON)
 
-# Workspace name
-project(ss-libuv)
-use_c99()
+# Output directories
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
-SET(CMAKE_BUILD_TYPE Debug)
-set(CONFIGURATION_NAME "Debug")
-# Projects
-SET(CMAKE_C_FLAGS_DEBUG "$ENV{CFLAGS}  -O0 -Wall -g -ggdb")
-IF (WIN32)
-add_executable(ssclient src/client.c src/crypt.c src/getopt.c src/handshake.c src/localmain.c src/localser.c src/remote.c  src/shadow.c src/utils.c)
-add_executable(ssserver src/crypt.c src/getopt.c src/handshake.c src/remote.c src/server.c src/shadow.c src/utils.c)
-target_link_libraries(ssclient uv crypto ssl ws2_32)
-target_link_libraries(ssserver uv crypto ssl ws2_32)
-ELSEIF(CMAKE_SYSTEM_NAME MATCHES "MINGW")
-add_executable(ssclient src/client.c src/crypt.c src/getopt.c src/handshake.c src/localmain.c src/localser.c src/remote.c  src/shadow.c src/utils.c)
-add_executable(ssserver src/crypt.c src/getopt.c src/handshake.c src/remote.c src/server.c src/shadow.c src/utils.c)
-target_link_libraries(ssclient uv crypto ssl ws2_32)
-target_link_libraries(ssserver uv crypto ssl ws2_32)
-ELSE()
-SET(CMAKE_C_FLAGS_DEBUG "-DHAVE_UNISTD_H ${CMAKE_C_FLAGS_DEBUG}")
-add_executable(ssclient src/client.c src/crypt.c src/handshake.c src/localmain.c src/localser.c src/remote.c  src/shadow.c src/utils.c)
-add_executable(ssserver src/crypt.c src/handshake.c src/remote.c src/server.c src/shadow.c src/utils.c)
-target_link_libraries(ssclient uv crypto ssl )
-target_link_libraries(ssserver uv crypto ssl )
-ENDIF()
-set_property(TARGET ssclient PROPERTY C_STANDARD 99)
-set_property(TARGET ssserver PROPERTY C_STANDARD 99)
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Debug)
+endif()
 
+# Dependencies
+find_package(OpenSSL REQUIRED)
+
+find_path(LIBUV_INCLUDE_DIR NAMES uv.h)
+find_library(LIBUV_LIBRARY NAMES uv)
+
+if(NOT LIBUV_INCLUDE_DIR OR NOT LIBUV_LIBRARY)
+    message(FATAL_ERROR "libuv not found")
+endif()
+
+# Source files
+set(COMMON_SOURCES
+    src/crypt.c
+    src/handshake.c
+    src/remote.c
+    src/shadow.c
+    src/utils.c
+)
+
+if(WIN32 OR CMAKE_SYSTEM_NAME MATCHES "MINGW")
+    list(APPEND COMMON_SOURCES src/getopt.c)
+endif()
+
+add_executable(ssclient
+    src/client.c
+    src/localmain.c
+    src/localser.c
+    ${COMMON_SOURCES}
+)
+
+add_executable(ssserver
+    src/server.c
+    ${COMMON_SOURCES}
+)
+
+# Target configurations
+foreach(target ssclient ssserver)
+    target_include_directories(${target} PRIVATE src ${LIBUV_INCLUDE_DIR})
+    target_link_libraries(${target} PRIVATE ${LIBUV_LIBRARY} OpenSSL::SSL OpenSSL::Crypto)
+
+    if(WIN32 OR CMAKE_SYSTEM_NAME MATCHES "MINGW")
+        target_link_libraries(${target} PRIVATE ws2_32)
+    else()
+        target_compile_definitions(${target} PRIVATE HAVE_UNISTD_H)
+    endif()
+
+    if(MSVC)
+        target_compile_options(${target} PRIVATE /W4)
+    else()
+        target_compile_options(${target} PRIVATE $<$<CONFIG:Debug>:-O0 -Wall -g -ggdb>)
+    endif()
+endforeach()
