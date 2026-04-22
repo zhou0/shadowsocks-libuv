@@ -1,0 +1,45 @@
+# Compiled object files
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+
+# Libraries
+*.lib
+*.a
+*.so
+*.dylib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Build directories
+build/
+cmake-build-*/
+
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+install_manifest.txt
+
+# Generated files
+*.log
+*.tmp
+*.swp
+*~
+
+# IDE files
+.vscode/
+.idea/
+*.code-workspace
+
+# macOS specific
+.DS_Store
+
+# Other
+*.pid
